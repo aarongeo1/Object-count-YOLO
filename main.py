@@ -1,6 +1,7 @@
 import cv2
 import argparse
 from ultralytics import YOLO
+import supervision as sv
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="YOLOv8")
@@ -22,9 +23,17 @@ def main():
     cap.set(cv2.CAP_PROP_FRAME_HEIGHT, args.webcam_resolution[1])
 
     model = YOLO("yolov8l.pt")
+    bbox = sv.BoxAnnotator(
+        thickness=2,
+    )
+
     while True:
         ret, frame = cap.read()
-        result = model(frame)
+        result = model(frame)[0]
+        detections = sv.Detections.from_ultralytics(result)
+        labels = []
+
+        frame = bbox.annotate(scene = frame, detections = detections)
         cv2.imshow("yolov8", frame)
 
 
